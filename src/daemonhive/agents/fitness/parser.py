@@ -30,14 +30,16 @@ LINE = re.compile(
     re.X | re.I,
 )
 
-ALIASES = {
+# whole-name aliases ("bench" -> "bench press", but "bench press" stays as is)
+NAME_ALIASES = {
     "bench": "bench press",
     "bp": "bench press",
     "ohp": "overhead press",
     "squat": "back squat",
     "dl": "deadlift",
-    "db": "dumbbell",
 }
+# word-level abbreviations, expanded anywhere in a name
+WORD_ALIASES = {"db": "dumbbell", "bb": "barbell"}
 
 
 class ParseError(ValueError):
@@ -78,11 +80,10 @@ class Session:
 
 
 def normalize_name(raw: str) -> str:
-    words = raw.lower().replace(".", "").split()
-    out: list[str] = []
-    for w in words:
-        out.extend(ALIASES.get(w, w).split())
-    return " ".join(out)
+    name = " ".join(raw.lower().replace(".", "").split())
+    if name in NAME_ALIASES:
+        return NAME_ALIASES[name]
+    return " ".join(WORD_ALIASES.get(w, w) for w in name.split())
 
 
 def parse_weight(token: str) -> tuple[float, bool]:
