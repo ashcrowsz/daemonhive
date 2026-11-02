@@ -1,0 +1,54 @@
+x-agent: &agent
+  build: .
+  env_file: .env
+  depends_on: [postgres, nats, neo4j]
+
+services:
+  gateway:
+    <<: *agent
+    command: ["python", "-m", "daemonhive.gateway.telegram"]
+
+  concierge:
+    <<: *agent
+    command: ["uvicorn", "daemonhive.agents.concierge.app:app", "--host", "0.0.0.0", "--port", "8100"]
+    ports: ["8100:8100"]
+
+  fitness:
+    <<: *agent
+    command: ["uvicorn", "daemonhive.agents.fitness.app:app", "--host", "0.0.0.0", "--port", "8101"]
+    ports: ["8101:8101"]
+
+  wellbeing:
+    <<: *agent
+    command: ["uvicorn", "daemonhive.agents.wellbeing.app:app", "--host", "0.0.0.0", "--port", "8102"]
+    ports: ["8102:8102"]
+
+  memory-mcp:
+    <<: *agent
+    command: ["python", "-m", "daemonhive.mcp.memory_server", "--transport", "http", "--port", "8200"]
+
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: hive, POSTGRES_PASSWORD: hive, POSTGRES_DB: hive }
+    volumes: ["./db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro"]
+    ports: ["5432:5432"]
+
+  neo4j:
+    image: neo4j:5-community
+    environment: { NEO4J_AUTH: neo4j/hivehive }
+    ports: ["7474:7474", "7687:7687"]
+
+  nats:
+    image: nats:2-alpine
+    command: ["-js"]
+    ports: ["4222:4222"]
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    command: ["--config", "/etc/litellm.yaml"]
+    volumes: ["./deploy/litellm.yaml:/etc/litellm.yaml:ro"]
+    ports: ["4000:4000"]
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
