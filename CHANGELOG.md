@@ -1,5 +1,11 @@
 # changelog
 
+### 2026-11-09 · shared temporal memory with per-agent scopes
+`feat/temporal-memory`
+- memory permission guard + audit log
+- memory-mcp on graphiti/neo4j
+- reference scenario harness: trajectory + graph end state
+
 ### 2026-11-06 · fitness agent end to end
 `feat/fitness-agent`
 - tiered model routing + per-agent litellm keys
