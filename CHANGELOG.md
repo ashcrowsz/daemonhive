@@ -1,5 +1,11 @@
 # changelog
 
+### 2026-11-12 · concierge, events and the telegram gateway
+`feat/concierge-events`
+- nats events: idempotent consumer + dead letter
+- concierge: rules first, small model second
+- telegram gateway, single allowed chat
+
 ### 2026-11-09 · shared temporal memory with per-agent scopes
 `feat/temporal-memory`
 - memory permission guard + audit log
