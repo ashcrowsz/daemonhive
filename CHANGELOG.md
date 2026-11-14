@@ -1,5 +1,10 @@
 # changelog
 
+### 2026-11-14 · work planner + nightly scribe
+`feat/work-scribe`
+- work: move deep work past 11:00 after short nights
+- scribe: entity merge candidates + fact invalidation
+
 ### 2026-11-12 · concierge, events and the telegram gateway
 `feat/concierge-events`
 - nats events: idempotent consumer + dead letter
