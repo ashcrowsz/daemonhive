@@ -1,0 +1,31 @@
+image:
+  repository: europe-west1-docker.pkg.dev/PROJECT/daemonhive/daemonhive
+  tag: latest
+
+agents:
+  concierge:
+    port: 8100
+    module: daemonhive.agents.concierge.app:app
+    talksTo: [fitness, wellbeing, work]
+  fitness:
+    port: 8101
+    module: daemonhive.agents.fitness.app:app
+    talksTo: [wellbeing]
+    mcp: [fitness-db, memory]
+  wellbeing:
+    port: 8102
+    module: daemonhive.agents.wellbeing.app:app
+    talksTo: []
+    mcp: [wellbeing-db, memory]
+
+cronjobs:
+  morning-brief:
+    schedule: "30 7 * * *"
+    command: ["python", "-m", "daemonhive.agents.work.brief"]
+  scribe-nightly:
+    schedule: "15 3 * * *"
+    command: ["python", "-m", "daemonhive.agents.scribe.run"]
+
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { cpu: 500m, memory: 384Mi }
