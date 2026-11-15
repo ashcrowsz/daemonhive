@@ -1,5 +1,10 @@
 # changelog
 
+### 2026-11-15 · helm chart + CI
+`deploy/helm`
+- helm: deployment + netpol per agent, cronjobs
+- ci: unit + offline scenarios, live scenarios on main
+
 ### 2026-11-14 · work planner + nightly scribe
 `feat/work-scribe`
 - work: move deep work past 11:00 after short nights

@@ -1,0 +1,50 @@
+{{- range $name, $a := .Values.agents }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels: { app.kubernetes.io/part-of: daemonhive, hive/agent: {{ $name }} }
+spec:
+  replicas: 1
+  selector: { matchLabels: { hive/agent: {{ $name }} } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/part-of: daemonhive, hive/agent: {{ $name }} }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001 }
+      containers:
+        - name: agent
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+          command: ["uvicorn", "{{ $a.module }}", "--host", "0.0.0.0", "--port", "{{ $a.port }}"]
+          ports: [{ containerPort: {{ $a.port }}, name: a2a }]
+          readinessProbe:
+            httpGet: { path: /.well-known/agent-card.json, port: a2a }
+          envFrom:
+            - secretRef: { name: hive-{{ $name }} }
+          resources: {{- toYaml $.Values.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata: { name: {{ $name }} }
+spec:
+  selector: { hive/agent: {{ $name }} }
+  ports: [{ port: {{ $a.port }}, targetPort: a2a, name: a2a }]
+---
+# Only the agents listed in someone's talksTo may reach this agent's A2A port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: {{ $name }}-a2a-ingress }
+spec:
+  podSelector: { matchLabels: { hive/agent: {{ $name }} } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        {{- range $caller, $c := $.Values.agents }}
+        {{- if has $name $c.talksTo }}
+        - podSelector: { matchLabels: { hive/agent: {{ $caller }} } }
+        {{- end }}
+        {{- end }}
+        - podSelector: { matchLabels: { app: gateway } }
+      ports: [{ port: {{ $a.port }} }]
+{{- end }}
