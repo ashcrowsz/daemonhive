@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - name: unit + offline scenarios
+        run: pytest -q
+
+  scenarios-live:
+    # full scenarios against real models; only on main, gates the image tag bump
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: hive, POSTGRES_PASSWORD: hive, POSTGRES_DB: hive }
+        ports: ["5432:5432"]
+      neo4j:
+        image: neo4j:5-community
+        env: { NEO4J_AUTH: neo4j/hivehive }
+        ports: ["7687:7687"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e ".[dev]"
+      - run: psql postgresql://hive:hive@localhost:5432/hive -f db/schema.sql
+      - name: run scenarios
+        env:
+          LITELLM_BASE_URL: ${{ secrets.LITELLM_BASE_URL }}
+          LITELLM_KEY_FITNESS: ${{ secrets.LITELLM_KEY_CI }}
+        run: pytest -q tests/test_reference_scenario.py
