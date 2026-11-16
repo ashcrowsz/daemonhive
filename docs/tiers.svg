@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 260" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif">
+  <style>
+    .bg { fill: #0f0d17; }
+    .t { fill: #f0f6fc; font-size: 15px; font-weight: 700; }
+    .s { fill: #c9d1d9; font-size: 12px; }
+    .m { fill: #9ea7b3; font-size: 11px; }
+    .dot { animation: mv 4s linear infinite; }
+    @keyframes mv { 0% { transform: translateX(0); opacity: 0 } 10% { opacity: 1 } 90% { opacity: 1 } 100% { transform: translateX(860px); opacity: 0 } }
+  </style>
+  <rect class="bg" width="960" height="260" rx="14"/>
+  <text x="30" y="36" fill="#f0f6fc" font-size="20" font-weight="700">tiered routing · spend tokens only where code can't</text>
+
+  <rect x="30" y="64" width="420" height="150" rx="12" fill="#132a22" stroke="#3fb950" stroke-width="2"/>
+  <text x="50" y="94" class="t">tier 0 · code</text>
+  <text x="50" y="118" class="s">workout grammar, sleep/meal patterns,</text>
+  <text x="50" y="136" class="s">keyword routing, regression math, cron reminders</text>
+  <text x="50" y="164" class="m">free · instant · deterministic · testable</text>
+  <text x="50" y="196" fill="#3fb950" font-size="13" font-weight="700">where most events should end</text>
+
+  <rect x="470" y="84" width="230" height="130" rx="12" fill="#2a2412" stroke="#d29922" stroke-width="2"/>
+  <text x="490" y="114" class="t">tier 1 · small model</text>
+  <text x="490" y="138" class="s">ambiguous intent routing</text>
+  <text x="490" y="156" class="s">short classifications</text>
+  <text x="490" y="184" class="m">Ollama on CPU / cheapest hosted</text>
+
+  <rect x="720" y="104" width="210" height="110" rx="12" fill="#241a3a" stroke="#a371f7" stroke-width="2"/>
+  <text x="740" y="134" class="t">tier 2 · big model</text>
+  <text x="740" y="158" class="s">cross-domain reasoning,</text>
+  <text x="740" y="176" class="s">messages you actually read</text>
+  <text x="740" y="198" class="m">LiteLLM budget per agent</text>
+
+  <circle class="dot" cx="40" cy="236" r="5" fill="#3fb950"/>
+  <circle class="dot" cx="40" cy="236" r="5" fill="#3fb950" style="animation-delay:.7s"/>
+  <circle class="dot" cx="40" cy="236" r="5" fill="#d29922" style="animation-delay:1.4s"/>
+  <circle class="dot" cx="40" cy="236" r="5" fill="#3fb950" style="animation-delay:2.1s"/>
+  <circle class="dot" cx="40" cy="236" r="5" fill="#a371f7" style="animation-delay:2.8s"/>
+  <text x="480" y="252" class="m" text-anchor="middle">every event is logged with the tier that handled it → /stats on Concierge</text>
+</svg>

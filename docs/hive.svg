@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif">
+  <style>
+    .bg { fill: #0f0d17; }
+    .hex { stroke-width: 2; }
+    .c { fill: #241a3a; stroke: #a371f7; }
+    .f { fill: #2b1d14; stroke: #f0883e; }
+    .w { fill: #132a22; stroke: #3fb950; }
+    .k { fill: #13213a; stroke: #58a6ff; }
+    .sc { fill: #2a2412; stroke: #d29922; }
+    .t { fill: #f0f6fc; font-size: 15px; font-weight: 700; }
+    .s { fill: #9ea7b3; font-size: 11.5px; }
+    .box { fill: #17141f; stroke: #3b3450; stroke-width: 1.5; }
+    .a2a { stroke: #a371f7; stroke-width: 2.2; fill: none; stroke-dasharray: 7 6; animation: d 1.2s linear infinite; }
+    .mcp { stroke: #6e7681; stroke-width: 1.6; fill: none; stroke-dasharray: 3 5; animation: d 2s linear infinite; }
+    @keyframes d { to { stroke-dashoffset: -26; } }
+    .glow { animation: g 3s ease-in-out infinite; }
+    @keyframes g { 0%,100% { opacity: .35 } 50% { opacity: .9 } }
+  </style>
+  <rect class="bg" width="960" height="500" rx="14"/>
+  <text x="30" y="38" fill="#f0f6fc" font-size="20" font-weight="700">daemonhive · the hive</text>
+  <text x="30" y="60" class="s">each agent owns its own data. They talk over A2A (purple) and reach tools over MCP (grey).</text>
+
+  <!-- telegram -->
+  <rect class="box" x="30" y="190" width="130" height="64" rx="10"/>
+  <text x="95" y="218" class="t" text-anchor="middle">Telegram</text>
+  <text x="95" y="237" class="s" text-anchor="middle">gateway · 1 chat id</text>
+
+  <!-- concierge hex -->
+  <circle cx="300" cy="222" r="78" fill="#a371f7" class="glow" opacity=".25"/>
+  <polygon class="hex c" points="300,152 360,187 360,257 300,292 240,257 240,187"/>
+  <text x="300" y="218" class="t" text-anchor="middle">Concierge</text>
+  <text x="300" y="237" class="s" text-anchor="middle">routes · merges</text>
+
+  <!-- fitness -->
+  <polygon class="hex f" points="540,90 595,122 595,186 540,218 485,186 485,122"/>
+  <text x="540" y="150" class="t" text-anchor="middle">Fitness</text>
+  <text x="540" y="168" class="s" text-anchor="middle">sets · PRs · dips</text>
+
+  <!-- wellbeing -->
+  <polygon class="hex w" points="720,190 775,222 775,286 720,318 665,286 665,222"/>
+  <text x="720" y="250" class="t" text-anchor="middle">Well-being</text>
+  <text x="720" y="268" class="s" text-anchor="middle">sleep · food · weight</text>
+
+  <!-- work -->
+  <polygon class="hex k" points="540,262 595,294 595,358 540,390 485,358 485,294"/>
+  <text x="540" y="322" class="t" text-anchor="middle">Work</text>
+  <text x="540" y="340" class="s" text-anchor="middle">tasks · calendar</text>
+
+  <!-- scribe -->
+  <polygon class="hex sc" points="870,72 910,95 910,141 870,164 830,141 830,95"/>
+  <text x="870" y="114" fill="#f0f6fc" font-size="13" font-weight="700" text-anchor="middle">Scribe</text>
+  <text x="870" y="130" class="s" text-anchor="middle">3:15 AM</text>
+
+  <!-- a2a edges -->
+  <path class="a2a" d="M160 222 H236"/>
+  <path class="a2a" d="M360 200 L486 160"/>
+  <path class="a2a" d="M360 244 L486 320"/>
+  <path class="a2a" d="M596 170 L666 228"/>
+  <path class="a2a" d="M596 330 L666 274"/>
+  <text x="606" y="157" fill="#a371f7" font-size="11" transform="rotate(40 606 157)">"how did I sleep?"</text>
+
+  <!-- memory -->
+  <rect class="box" x="250" y="420" width="660" height="56" rx="12"/>
+  <text x="580" y="444" class="t" text-anchor="middle">memory-mcp · Graphiti on Neo4j</text>
+  <text x="580" y="462" class="s" text-anchor="middle">temporal facts: Session:push:2026-11-03 —AFFECTED_BY→ SleepDeficit (valid from …)  ·  per-agent write scopes + audit log</text>
+
+  <path class="mcp" d="M520 390 L480 418"/>
+  <path class="mcp" d="M720 318 L700 418"/>
+  <path class="mcp" d="M870 164 C 900 300, 880 380, 860 418"/>
+  <path class="mcp" d="M520 210 C 430 300, 420 380, 420 418"/>
+
+  <text x="30" y="330" class="s">events · NATS JetStream</text>
+  <text x="30" y="348" class="s">workout.logged · sleep.logged</text>
+  <text x="30" y="366" class="s">task.due · dlq</text>
+  <text x="30" y="396" class="s">models · LiteLLM, key + budget per agent</text>
+</svg>

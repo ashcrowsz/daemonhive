@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif">
+  <style>
+    .bg { fill: #0f0d17; }
+    .hd { fill: #17141f; stroke: #3b3450; stroke-width: 1.5; }
+    .t { fill: #f0f6fc; font-size: 13.5px; font-weight: 700; }
+    .s { fill: #c9d1d9; font-size: 12px; }
+    .m { fill: #9ea7b3; font-size: 11px; }
+    .life { stroke: #3b3450; stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .msg { stroke-width: 2; fill: none; }
+    .step { animation: in 12s infinite; }
+    @keyframes in { 0% { opacity: .15 } 5% { opacity: 1 } 100% { opacity: 1 } }
+  </style>
+  <defs>
+    <marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#a371f7"/></marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f0883e"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3fb950"/></marker>
+    <marker id="x" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8b949e"/></marker>
+  </defs>
+  <rect class="bg" width="960" height="470" rx="14"/>
+  <text x="30" y="36" fill="#f0f6fc" font-size="20" font-weight="700">the reference scenario · "why did my bench tank?"</text>
+
+  <!-- heads -->
+  <rect class="hd" x="40" y="56" width="120" height="34" rx="8"/><text x="100" y="78" class="t" text-anchor="middle">You</text>
+  <rect class="hd" x="220" y="56" width="120" height="34" rx="8"/><text x="280" y="78" class="t" text-anchor="middle">Concierge</text>
+  <rect class="hd" x="400" y="56" width="120" height="34" rx="8"/><text x="460" y="78" class="t" text-anchor="middle">Fitness</text>
+  <rect class="hd" x="580" y="56" width="120" height="34" rx="8"/><text x="640" y="78" class="t" text-anchor="middle">Well-being</text>
+  <rect class="hd" x="760" y="56" width="160" height="34" rx="8"/><text x="840" y="78" class="t" text-anchor="middle">memory (graph)</text>
+
+  <line class="life" x1="100" y1="90" x2="100" y2="450"/>
+  <line class="life" x1="280" y1="90" x2="280" y2="450"/>
+  <line class="life" x1="460" y1="90" x2="460" y2="450"/>
+  <line class="life" x1="640" y1="90" x2="640" y2="450"/>
+  <line class="life" x1="840" y1="90" x2="840" y2="450"/>
+
+  <g class="step" style="animation-delay:0s">
+    <path class="msg" stroke="#8b949e" d="M100 120 H276" marker-end="url(#x)"/>
+    <text x="108" y="112" class="s">Push · Bench 120kg 3x3</text>
+  </g>
+  <g class="step" style="animation-delay:.8s">
+    <path class="msg" stroke="#a371f7" d="M280 155 H456" marker-end="url(#p)"/>
+    <text x="290" y="148" class="s">A2A log_workout</text>
+    <text x="290" y="170" class="m">tier 0: grammar matched, no LLM</text>
+  </g>
+  <g class="step" style="animation-delay:1.6s">
+    <rect x="470" y="185" width="160" height="44" rx="6" fill="#2b1d14" stroke="#f0883e"/>
+    <text x="480" y="203" class="s">parse · store · compare</text>
+    <text x="480" y="220" class="m">volume 2880 → 1080 kg (−62%)</text>
+  </g>
+  <g class="step" style="animation-delay:2.6s">
+    <path class="msg" stroke="#a371f7" d="M460 255 H636" marker-end="url(#p)"/>
+    <text x="470" y="248" class="s">A2A recovery_summary(3 days)</text>
+  </g>
+  <g class="step" style="animation-delay:3.4s">
+    <path class="msg" stroke="#3fb950" d="M640 290 H464" marker-end="url(#g)"/>
+    <text x="650" y="285" class="s">5.2 h sleep · −600 kcal/day</text>
+    <text x="650" y="302" class="m">flags: SleepDeficit, CalorieDeficit</text>
+  </g>
+  <g class="step" style="animation-delay:4.2s">
+    <path class="msg" stroke="#f0883e" d="M460 330 H836" marker-end="url(#o)"/>
+    <text x="472" y="322" class="s">MCP add_fact: Session —AFFECTED_BY→ SleepDeficit</text>
+  </g>
+  <g class="step" style="animation-delay:5.2s">
+    <path class="msg" stroke="#8b949e" d="M460 385 H104" marker-end="url(#x)"/>
+    <text x="114" y="356" class="s">"Bench volume dropped 62%. You slept ~5h and ate</text>
+    <text x="114" y="374" class="s">under target. Was that it, or is something else up?"</text>
+    <text x="114" y="404" class="m">tier 2: the only message a big model writes</text>
+  </g>
+  <g class="step" style="animation-delay:6.2s">
+    <text x="600" y="430" fill="#58a6ff" font-size="12">next week: Work reads the graph and moves deep work</text>
+    <text x="600" y="446" fill="#58a6ff" font-size="12">after short nights to 11:00</text>
+  </g>
+</svg>
