@@ -38,8 +38,15 @@ class FakeMemory:
     guard: Guard = field(default_factory=Guard)
     facts: list[tuple[str, str, str]] = field(default_factory=list)
 
-    async def add_fact(self, source: str, subject: str, relation: str, obj: str,
-                       valid_from: str, props: dict[str, Any]) -> None:
+    async def add_fact(
+        self,
+        source: str,
+        subject: str,
+        relation: str,
+        obj: str,
+        valid_from: str,
+        props: dict[str, Any],
+    ) -> None:
         self.guard.check_write(source, subject, relation, obj)
         self.facts.append((subject, relation, obj))
 
@@ -54,19 +61,28 @@ class FakeWellbeing:
     async def send(self, base_url: str, skill: str, payload: dict[str, Any]) -> TaskResult:
         if not self.online:
             return TaskResult(id="t", state=TaskState.failed, error="unreachable")
-        out = recovery_summary(self.sleep, self.meals, until=date.fromisoformat(payload["until"]),
-                               days=payload["days"], kcal_target=self.kcal_target)
+        out = recovery_summary(
+            self.sleep,
+            self.meals,
+            until=date.fromisoformat(payload["until"]),
+            days=payload["days"],
+            kcal_target=self.kcal_target,
+        )
         return TaskResult(id="t", state=TaskState.completed, output=out)
 
 
 class EchoWriter:
     """Stands in for the tier-2 model: returns the prompt so tests can inspect it."""
 
-    async def ask(self, system: str, user: str, tier: Tier = Tier.large, max_tokens: int = 600) -> str:
+    async def ask(
+        self, system: str, user: str, tier: Tier = Tier.large, max_tokens: int = 600
+    ) -> str:
         return user
 
 
-async def run_fitness(history: list[str], log: str, wellbeing: FakeWellbeing) -> tuple[Outcome, FakeMemory]:
+async def run_fitness(
+    history: list[str], log: str, wellbeing: FakeWellbeing
+) -> tuple[Outcome, FakeMemory]:
     store, memory = FakeStore(), FakeMemory()
     for h in history:
         store.sessions.append(parse_session(h))

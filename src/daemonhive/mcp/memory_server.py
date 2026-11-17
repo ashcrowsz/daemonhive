@@ -36,8 +36,14 @@ async def graph() -> Any:
 
 
 @mcp.tool()
-async def add_fact(agent: str, subject: str, relation: str, obj: str, valid_from: str,
-                   props: dict[str, Any] | None = None) -> str:
+async def add_fact(
+    agent: str,
+    subject: str,
+    relation: str,
+    obj: str,
+    valid_from: str,
+    props: dict[str, Any] | None = None,
+) -> str:
     """Record `subject -[relation]-> obj`, true from `valid_from` (ISO date)."""
     guard.check_write(agent, subject, relation, obj)
     from graphiti_core.nodes import EpisodeType
@@ -55,7 +61,9 @@ async def add_fact(agent: str, subject: str, relation: str, obj: str, valid_from
 
 
 @mcp.tool()
-async def search_facts(agent: str, query: str, entity: str, limit: int = 10) -> list[dict[str, Any]]:
+async def search_facts(
+    agent: str, query: str, entity: str, limit: int = 10
+) -> list[dict[str, Any]]:
     """Hybrid search over facts about one entity type the caller may read."""
     guard.check_read(agent, entity_type(entity))
     g = await graph()

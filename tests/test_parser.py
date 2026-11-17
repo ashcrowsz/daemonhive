@@ -17,7 +17,10 @@ def test_reference_log() -> None:
     s = parse_session(LOG)
     assert (s.kind, s.day) == ("push", date(2026, 11, 3))
     assert [e.name for e in s.exercises] == [
-        "bench press", "incline dumbbell press", "dips", "overhead press"
+        "bench press",
+        "incline dumbbell press",
+        "dips",
+        "overhead press",
     ]
     bench = s.exercise("bench press")
     assert bench and len(bench.sets) == 3 and bench.sets[0].rpe == 7

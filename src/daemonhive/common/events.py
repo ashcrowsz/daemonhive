@@ -68,7 +68,7 @@ async def handle_once(
     try:
         await handler(event)
         return "ok"
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - any handler failure means retry or dead-letter
         seen.forget(event.id)  # allow redelivery to retry
         if attempt >= max_attempts:
             await dead_letter(event, str(exc))

@@ -27,7 +27,7 @@ LINE = re.compile(
         (?P<weight>BW(?:\+\d+(?:\.\d+)?(?:kg|lb))?|\d+(?:\.\d+)?(?:kg|lb))\s+
         (?:(?P<sets>\d+)\s*x\s*(?P<reps>\d+)|(?P<replist>\d+(?:\s*,\s*\d+)+))
         (?:\s+(?:RPE\s*|@)(?P<rpe>\d+(?:\.\d+)?))?\s*$""",
-    re.X | re.I,
+    re.VERBOSE | re.IGNORECASE,
 )
 
 # whole-name aliases ("bench" -> "bench press", but "bench press" stays as is)

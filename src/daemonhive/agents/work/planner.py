@@ -28,7 +28,9 @@ DAY_END = time(19, 0)
 SHORT_NIGHT_NOT_BEFORE = time(11, 0)
 
 
-def free_slots(day: date, busy: list[Busy], not_before: time = DAY_START) -> list[tuple[datetime, datetime]]:
+def free_slots(
+    day: date, busy: list[Busy], not_before: time = DAY_START
+) -> list[tuple[datetime, datetime]]:
     cursor = datetime.combine(day, max(DAY_START, not_before))
     end_of_day = datetime.combine(day, DAY_END)
     slots: list[tuple[datetime, datetime]] = []

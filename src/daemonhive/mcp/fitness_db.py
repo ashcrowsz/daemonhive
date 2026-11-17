@@ -28,7 +28,9 @@ async def save(s: Session) -> int:
         sid = await conn.fetchval(
             "INSERT INTO fitness.session (kind, day, notes) VALUES ($1, $2, $3) "
             "ON CONFLICT (kind, day) DO UPDATE SET notes = EXCLUDED.notes RETURNING id",
-            s.kind, s.day, "\n".join(s.notes),
+            s.kind,
+            s.day,
+            "\n".join(s.notes),
         )
         await conn.execute("DELETE FROM fitness.set WHERE session_id = $1", sid)
         for order, ex in enumerate(s.exercises):
@@ -36,7 +38,14 @@ async def save(s: Session) -> int:
                 await conn.execute(
                     "INSERT INTO fitness.set (session_id, exercise, ex_order, set_no, weight_kg,"
                     " reps, rpe, bodyweight) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-                    sid, ex.name, order, n, st.weight_kg, st.reps, st.rpe, st.bodyweight,
+                    sid,
+                    ex.name,
+                    order,
+                    n,
+                    st.weight_kg,
+                    st.reps,
+                    st.rpe,
+                    st.bodyweight,
                 )
     return int(sid)
 
@@ -45,13 +54,16 @@ async def load_last(kind: str, before: date) -> Session | None:
     p = await pool()
     row = await p.fetchrow(
         "SELECT id, kind, day FROM fitness.session WHERE kind = $1 AND day < $2 "
-        "ORDER BY day DESC LIMIT 1", kind, before,
+        "ORDER BY day DESC LIMIT 1",
+        kind,
+        before,
     )
     if row is None:
         return None
     sets = await p.fetch(
         "SELECT exercise, weight_kg, reps, rpe, bodyweight FROM fitness.set "
-        "WHERE session_id = $1 ORDER BY ex_order, set_no", row["id"],
+        "WHERE session_id = $1 ORDER BY ex_order, set_no",
+        row["id"],
     )
     by_ex: dict[str, list[SetEntry]] = {}
     for r in sets:
@@ -69,7 +81,9 @@ async def get_progression(exercise: str, weeks: int = 12) -> list[dict[str, Any]
         "SELECT s.day, max(x.weight_kg) AS top_kg, sum(x.weight_kg * x.reps) AS volume_kg "
         "FROM fitness.set x JOIN fitness.session s ON s.id = x.session_id "
         "WHERE x.exercise = $1 AND s.day > now() - make_interval(weeks => $2) "
-        "GROUP BY s.day ORDER BY s.day", exercise, weeks,
+        "GROUP BY s.day ORDER BY s.day",
+        exercise,
+        weeks,
     )
     return [dict(r) for r in rows]
 

@@ -12,10 +12,14 @@ from daemonhive.common.tiers import TIER_MODELS, Tier
 class AgentLLM:
     def __init__(self, agent: str, base_url: str | None = None) -> None:
         self.agent = agent
-        self.base_url = (base_url or os.environ.get("LITELLM_BASE_URL", "http://localhost:4000")).rstrip("/")
+        self.base_url = (
+            base_url or os.environ.get("LITELLM_BASE_URL", "http://localhost:4000")
+        ).rstrip("/")
         self.key = os.environ.get(f"LITELLM_KEY_{agent.upper()}", "")
 
-    async def ask(self, system: str, user: str, tier: Tier = Tier.large, max_tokens: int = 600) -> str:
+    async def ask(
+        self, system: str, user: str, tier: Tier = Tier.large, max_tokens: int = 600
+    ) -> str:
         if tier == Tier.code:
             raise ValueError("tier 0 is code, not a model call")
         async with httpx.AsyncClient(timeout=60) as c:

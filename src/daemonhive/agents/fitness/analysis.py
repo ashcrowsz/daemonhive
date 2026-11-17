@@ -48,8 +48,14 @@ def compare(previous: Session | None, current: Session) -> list[LiftDelta]:
             continue
         e1_now = estimated_1rm(top.weight_kg, top.reps)
         e1_before = estimated_1rm(before.top_set.weight_kg, before.top_set.reps)
-        delta = LiftDelta(ex.name, Signal.steady, before.volume_kg, ex.volume_kg,
-                          before.top_set.weight_kg, top.weight_kg)
+        delta = LiftDelta(
+            ex.name,
+            Signal.steady,
+            before.volume_kg,
+            ex.volume_kg,
+            before.top_set.weight_kg,
+            top.weight_kg,
+        )
         if e1_now > e1_before * 1.005:
             delta.signal = Signal.pr
         elif delta.volume_change <= -REGRESSION_THRESHOLD:

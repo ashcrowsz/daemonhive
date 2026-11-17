@@ -36,9 +36,7 @@ def recovery_summary(
             per_day[m.day] = per_day.get(m.day, 0) + m.kcal
 
     avg_sleep = round(sum(window_sleep) / len(window_sleep), 1) if window_sleep else None
-    kcal_delta = (
-        round(sum(per_day.values()) / len(per_day)) - kcal_target if per_day else 0
-    )
+    kcal_delta = round(sum(per_day.values()) / len(per_day)) - kcal_target if per_day else 0
 
     flags: list[str] = []
     if avg_sleep is not None and avg_sleep < SHORT_SLEEP_H:

@@ -26,8 +26,15 @@ class FitnessStore(Protocol):
 
 
 class Memory(Protocol):
-    async def add_fact(self, source: str, subject: str, relation: str, obj: str,
-                       valid_from: str, props: dict[str, Any]) -> None: ...
+    async def add_fact(
+        self,
+        source: str,
+        subject: str,
+        relation: str,
+        obj: str,
+        valid_from: str,
+        props: dict[str, Any],
+    ) -> None: ...
 
 
 class Peer(Protocol):
@@ -35,8 +42,9 @@ class Peer(Protocol):
 
 
 class Writer(Protocol):
-    async def ask(self, system: str, user: str, tier: Tier = Tier.large,
-                  max_tokens: int = 600) -> str: ...
+    async def ask(
+        self, system: str, user: str, tier: Tier = Tier.large, max_tokens: int = 600
+    ) -> str: ...
 
 
 @dataclass
@@ -48,8 +56,15 @@ class Outcome:
 
 
 class FitnessAgent:
-    def __init__(self, store: FitnessStore, memory: Memory, peer: Peer, writer: Writer,
-                 wellbeing_url: str, ledger: TierLedger | None = None) -> None:
+    def __init__(
+        self,
+        store: FitnessStore,
+        memory: Memory,
+        peer: Peer,
+        writer: Writer,
+        wellbeing_url: str,
+        ledger: TierLedger | None = None,
+    ) -> None:
         self.store, self.memory, self.peer, self.writer = store, memory, peer, writer
         self.wellbeing_url = wellbeing_url
         self.ledger = ledger or TierLedger()
@@ -95,8 +110,9 @@ class FitnessAgent:
         return Outcome(message, deltas, recovery, trace)
 
     async def _ask_recovery(self, session: Session, trace: list[str]) -> dict[str, Any] | None:
-        res = await self.peer.send(self.wellbeing_url, "recovery_summary",
-                                   {"until": session.day.isoformat(), "days": 3})
+        res = await self.peer.send(
+            self.wellbeing_url, "recovery_summary", {"until": session.day.isoformat(), "days": 3}
+        )
         trace.append(f"a2a:wellbeing.recovery_summary:{res.state.value}")
         if res.state is not TaskState.completed:
             return None  # Well-being down: still report the regression, just without the why
@@ -112,7 +128,8 @@ class FitnessAgent:
         rec = (
             f"Recovery last 3 days: avg sleep {recovery['avg_sleep_h']} h, "
             f"calories {recovery['kcal_vs_target']:+d} kcal/day vs target, flags {recovery['flags']}"
-            if recovery else "Recovery data unavailable (Well-being agent did not answer)."
+            if recovery
+            else "Recovery data unavailable (Well-being agent did not answer)."
         )
         notes = "; ".join(s.notes) or "none"
         return f"Session {s.kind} on {s.day}.\nRegressions:\n{facts}\n{rec}\nUser notes: {notes}"

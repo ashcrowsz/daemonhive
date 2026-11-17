@@ -24,8 +24,10 @@ async def on_message(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         log.warning("ignored message from chat %s", update.effective_chat.id)
         return
     async with httpx.AsyncClient(timeout=90) as c:
-        r = await c.post(f"{CONCIERGE}/inbound",
-                         json={"chat_id": update.effective_chat.id, "text": update.message.text})
+        r = await c.post(
+            f"{CONCIERGE}/inbound",
+            json={"chat_id": update.effective_chat.id, "text": update.message.text},
+        )
     reply = r.json().get("reply") if r.is_success else "Something broke on my side. Logged it."
     if reply:
         await update.message.reply_text(reply)

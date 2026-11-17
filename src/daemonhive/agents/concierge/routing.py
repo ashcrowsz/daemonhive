@@ -12,13 +12,25 @@ AGENTS = ("fitness", "wellbeing", "work")
 
 KEYWORDS: dict[str, tuple[str, ...]] = {
     "fitness": ("workout", "bench", "squat", "deadlift", "gym", "pr", "sets", "reps", "rpe"),
-    "wellbeing": ("slept", "sleep", "ate", "kcal", "calories", "protein", "weight", "breakfast",
-                  "lunch", "dinner", "meal", "nap"),
+    "wellbeing": (
+        "slept",
+        "sleep",
+        "ate",
+        "kcal",
+        "calories",
+        "protein",
+        "weight",
+        "breakfast",
+        "lunch",
+        "dinner",
+        "meal",
+        "nap",
+    ),
     "work": ("meeting", "task", "deadline", "calendar", "schedule", "todo", "project", "focus"),
 }
 
-SLEEP_LOG = re.compile(r"^\s*(slept|sleep)\s+\d+(\.\d+)?\s*h", re.I)
-MEAL_LOG = re.compile(r"^\s*(breakfast|lunch|dinner|snack)\b.*\d+\s*kcal", re.I)
+SLEEP_LOG = re.compile(r"^\s*(slept|sleep)\s+\d+(\.\d+)?\s*h", re.IGNORECASE)
+MEAL_LOG = re.compile(r"^\s*(breakfast|lunch|dinner|snack)\b.*\d+\s*kcal", re.IGNORECASE)
 
 
 @dataclass(frozen=True)

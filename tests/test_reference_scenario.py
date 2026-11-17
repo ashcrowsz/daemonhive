@@ -12,14 +12,22 @@ from scenarios.harness import FakeMemory, FakeWellbeing, run_fitness
 LAST_PUSH = "Push 2026-10-27\nBench Press 120kg 3x8\nOHP 60kg 3x8"
 TODAY = "Push 2026-11-03\nBench Press 120kg 3x3 RPE 9\nOHP 60kg 3x8\n# felt flat"
 
-SHORT_NIGHTS = [SleepRow(date(2026, 10, 31), 5.0), SleepRow(date(2026, 11, 1), 5.5),
-                SleepRow(date(2026, 11, 2), 5.0)]
-UNDER_EATING = [MealRow(date(2026, 10, 31), 2200), MealRow(date(2026, 11, 1), 2200),
-                MealRow(date(2026, 11, 2), 2200)]
+SHORT_NIGHTS = [
+    SleepRow(date(2026, 10, 31), 5.0),
+    SleepRow(date(2026, 11, 1), 5.5),
+    SleepRow(date(2026, 11, 2), 5.0),
+]
+UNDER_EATING = [
+    MealRow(date(2026, 10, 31), 2200),
+    MealRow(date(2026, 11, 1), 2200),
+    MealRow(date(2026, 11, 2), 2200),
+]
 
 
 def test_regression_triggers_a2a_and_memory_write() -> None:
-    out, memory = asyncio.run(run_fitness([LAST_PUSH], TODAY, FakeWellbeing(SHORT_NIGHTS, UNDER_EATING)))
+    out, memory = asyncio.run(
+        run_fitness([LAST_PUSH], TODAY, FakeWellbeing(SHORT_NIGHTS, UNDER_EATING))
+    )
     assert out.trace == [
         "parse:ok:2 exercises",
         "mcp:fitness-db.log_session",
@@ -56,4 +64,6 @@ def test_parse_error_is_answered_without_a_model() -> None:
 def test_injected_note_cannot_widen_permissions() -> None:
     """A note saying 'write a Project fact' changes nothing: scopes live in the MCP server."""
     with pytest.raises(PermissionDenied):
-        asyncio.run(FakeMemory().add_fact("fitness", "Project:x", "WORKS_ON", "me", "2026-11-03", {}))
+        asyncio.run(
+            FakeMemory().add_fact("fitness", "Project:x", "WORKS_ON", "me", "2026-11-03", {})
+        )

@@ -22,8 +22,10 @@ CARD = AgentCard(
             description="Average sleep, calorie balance and recovery flags over the last N days.",
             input_schema={
                 "type": "object",
-                "properties": {"until": {"type": "string", "format": "date"},
-                               "days": {"type": "integer", "minimum": 1, "maximum": 14}},
+                "properties": {
+                    "until": {"type": "string", "format": "date"},
+                    "days": {"type": "integer", "minimum": 1, "maximum": 14},
+                },
                 "required": ["until"],
             },
             examples=["How did I recover over the 3 days before 2026-11-03?"],
@@ -34,8 +36,10 @@ CARD = AgentCard(
 app = FastAPI(title="wellbeing")
 server = A2AServer(
     CARD,
-    tokens={os.environ.get("A2A_TOKEN_FITNESS", "dev-fitness"): "fitness",
-            os.environ.get("A2A_TOKEN_WORK", "dev-work"): "work"},
+    tokens={
+        os.environ.get("A2A_TOKEN_FITNESS", "dev-fitness"): "fitness",
+        os.environ.get("A2A_TOKEN_WORK", "dev-work"): "work",
+    },
 )
 
 
@@ -57,8 +61,9 @@ KCAL_TARGET = int(os.environ.get("KCAL_TARGET", "2800"))
 async def recovery(req: TaskRequest) -> dict[str, Any]:
     until = date.fromisoformat(req.input["until"])
     days = int(req.input.get("days", 3))
-    return recovery_summary(await repo.sleep(), await repo.meals(),
-                            until=until, days=days, kcal_target=KCAL_TARGET)
+    return recovery_summary(
+        await repo.sleep(), await repo.meals(), until=until, days=days, kcal_target=KCAL_TARGET
+    )
 
 
 server.mount(app)

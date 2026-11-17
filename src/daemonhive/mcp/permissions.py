@@ -60,8 +60,13 @@ class Guard:
     log: list[dict[str, object]] = field(default_factory=list)
 
     def _audit(self, agent: str, action: str, target: str, allowed: bool) -> None:
-        entry = {"ts": time.time(), "agent": agent, "action": action, "target": target,
-                 "allowed": allowed}
+        entry = {
+            "ts": time.time(),
+            "agent": agent,
+            "action": action,
+            "target": target,
+            "allowed": allowed,
+        }
         self.log.append(entry)
         if self.audit_path:
             with self.audit_path.open("a", encoding="utf-8") as f:
@@ -75,9 +80,8 @@ class Guard:
 
     def check_write(self, agent: str, subject: str, relation: str, obj: str) -> None:
         s = self._scope(agent)
-        ok = (
-            ("*" in s.write_entities or entity_type(subject) in s.write_entities)
-            and ("*" in s.write_relations or relation in s.write_relations)
+        ok = ("*" in s.write_entities or entity_type(subject) in s.write_entities) and (
+            "*" in s.write_relations or relation in s.write_relations
         )
         self._audit(agent, f"write:{relation}", f"{subject}->{obj}", ok)
         if not ok:

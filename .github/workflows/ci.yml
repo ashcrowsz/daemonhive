@@ -24,7 +24,8 @@ jobs:
 
   scenarios-live:
     # full scenarios against real models; only on main, gates the image tag bump
-    if: github.ref == 'refs/heads/main'
+    # needs real model keys; enable by setting the LIVE_SCENARIOS repo variable to 'true'
+    if: github.ref == 'refs/heads/main' && vars.LIVE_SCENARIOS == 'true'
     needs: test
     runs-on: ubuntu-latest
     services:

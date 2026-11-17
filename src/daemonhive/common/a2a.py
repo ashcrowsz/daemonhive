@@ -35,8 +35,12 @@ class AgentCard(BaseModel):
     version: str = "1.0.0"
     protocol_version: str = "0.3"
     capabilities: dict[str, bool] = Field(default_factory=lambda: {"streaming": False})
-    default_input_modes: list[str] = Field(default_factory=lambda: ["application/json", "text/plain"])
-    default_output_modes: list[str] = Field(default_factory=lambda: ["application/json", "text/plain"])
+    default_input_modes: list[str] = Field(
+        default_factory=lambda: ["application/json", "text/plain"]
+    )
+    default_output_modes: list[str] = Field(
+        default_factory=lambda: ["application/json", "text/plain"]
+    )
     security_schemes: dict[str, Any] = Field(
         default_factory=lambda: {"bearer": {"type": "http", "scheme": "bearer"}}
     )
@@ -108,7 +112,7 @@ class A2AServer:
                 return TaskResult(id=req.id, state=TaskState.rejected, error="caller not allowed")
             try:
                 return TaskResult(id=req.id, state=TaskState.completed, output=await handler(req))
-            except Exception as exc:  # the callee's failure is data for the caller
+            except Exception as exc:  # noqa: BLE001 - the callee's failure is data for the caller
                 return TaskResult(id=req.id, state=TaskState.failed, error=str(exc))
 
 

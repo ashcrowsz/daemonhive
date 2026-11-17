@@ -19,11 +19,17 @@ CARD = AgentCard(
     description="Owns workout logs and progression. Detects PRs and regressions.",
     url=os.environ.get("FITNESS_URL", "http://fitness:8101"),
     skills=[
-        Skill(id="log_workout", name="Log a workout",
-              description="Parse a workout log, store it, compare with the last session.",
-              examples=["Push 2026-11-03\nBench Press 120kg 3x3 RPE 7"]),
-        Skill(id="progression", name="Progression",
-              description="Top set and volume over time for one exercise."),
+        Skill(
+            id="log_workout",
+            name="Log a workout",
+            description="Parse a workout log, store it, compare with the last session.",
+            examples=["Push 2026-11-03\nBench Press 120kg 3x3 RPE 7"],
+        ),
+        Skill(
+            id="progression",
+            name="Progression",
+            description="Top set and volume over time for one exercise.",
+        ),
     ],
 )
 
@@ -42,14 +48,29 @@ class MemoryClient:
     def __init__(self, url: str) -> None:
         self.url = url
 
-    async def add_fact(self, source: str, subject: str, relation: str, obj: str,
-                       valid_from: str, props: dict[str, Any]) -> None:
+    async def add_fact(
+        self,
+        source: str,
+        subject: str,
+        relation: str,
+        obj: str,
+        valid_from: str,
+        props: dict[str, Any],
+    ) -> None:
         from fastmcp import Client
 
         async with Client(self.url) as c:
-            await c.call_tool("add_fact", {"agent": source, "subject": subject,
-                                           "relation": relation, "obj": obj,
-                                           "valid_from": valid_from, "props": props})
+            await c.call_tool(
+                "add_fact",
+                {
+                    "agent": source,
+                    "subject": subject,
+                    "relation": relation,
+                    "obj": obj,
+                    "valid_from": valid_from,
+                    "props": props,
+                },
+            )
 
 
 agent = FitnessAgent(
@@ -61,7 +82,9 @@ agent = FitnessAgent(
 )
 
 app = FastAPI(title="fitness")
-server = A2AServer(CARD, tokens={os.environ.get("A2A_TOKEN_CONCIERGE", "dev-concierge"): "concierge"})
+server = A2AServer(
+    CARD, tokens={os.environ.get("A2A_TOKEN_CONCIERGE", "dev-concierge"): "concierge"}
+)
 
 
 @server.skill("log_workout", allowed_callers={"concierge"})

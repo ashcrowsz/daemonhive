@@ -7,6 +7,7 @@ Facts are never deleted: "weight was 82 kg" stays true for the period it was tru
 
 from __future__ import annotations
 
+import itertools
 import re
 import unicodedata
 from dataclasses import dataclass, replace
@@ -51,7 +52,7 @@ def invalidate_superseded(facts: list[Fact]) -> list[Fact]:
             out.append(f)
     for group in by_key.values():
         group.sort(key=lambda f: f.valid_from)
-        for cur, nxt in zip(group, group[1:], strict=False):
+        for cur, nxt in itertools.pairwise(group):
             out.append(cur if cur.valid_to else replace(cur, valid_to=nxt.valid_from))
         out.append(group[-1])
     return out
@@ -59,7 +60,7 @@ def invalidate_superseded(facts: list[Fact]) -> list[Fact]:
 
 def value_at(facts: list[Fact], subject: str, relation: str, day: date) -> str | None:
     for f in facts:
-        if f.subject == subject and f.relation == relation and f.valid_from <= day:
-            if f.valid_to is None or day < f.valid_to:
-                return f.value
+        same = f.subject == subject and f.relation == relation
+        if same and f.valid_from <= day and (f.valid_to is None or day < f.valid_to):
+            return f.value
     return None

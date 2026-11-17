@@ -8,8 +8,12 @@ from daemonhive.common.a2a import A2AServer, AgentCard, Skill, TaskRequest
 
 
 def make_client() -> TestClient:
-    card = AgentCard(name="echo", description="echo agent", url="http://echo",
-                     skills=[Skill(id="echo", name="Echo", description="returns input")])
+    card = AgentCard(
+        name="echo",
+        description="echo agent",
+        url="http://echo",
+        skills=[Skill(id="echo", name="Echo", description="returns input")],
+    )
     server = A2AServer(card, tokens={"tok-fitness": "fitness", "tok-work": "work"})
 
     @server.skill("echo", allowed_callers={"fitness"})
@@ -24,8 +28,11 @@ def make_client() -> TestClient:
 
 
 def call(c: TestClient, token: str, caller: str, skill: str = "echo", **inp: Any) -> Any:
-    return c.post("/a2a/tasks", headers={"Authorization": f"Bearer {token}"},
-                  json={"skill": skill, "caller": caller, "input": inp})
+    return c.post(
+        "/a2a/tasks",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"skill": skill, "caller": caller, "input": inp},
+    )
 
 
 def test_agent_card_is_published() -> None:

@@ -54,7 +54,9 @@ def test_unknown_agent_is_denied() -> None:
 
 def test_idempotent_consumer() -> None:
     seen, calls, dlq = SeenSet(), [], []
-    ev = Event(id="workout:2026-11-03:push", subject="hive.workout.logged", source="fitness", data={})
+    ev = Event(
+        id="workout:2026-11-03:push", subject="hive.workout.logged", source="fitness", data={}
+    )
 
     async def ok(e: Event) -> None:
         calls.append(e.id)
@@ -65,8 +67,9 @@ def test_idempotent_consumer() -> None:
     async def dead(e: Event, err: str) -> None:
         dlq.append((e.id, err))
 
-    run = lambda h, a=1: asyncio.run(  # noqa: E731
-        handle_once(ev, seen, h, max_attempts=3, attempt=a, dead_letter=dead))
+    run = lambda h, a=1: asyncio.run(
+        handle_once(ev, seen, h, max_attempts=3, attempt=a, dead_letter=dead)
+    )
     assert run(ok) == "ok"
     assert run(ok) == "duplicate" and calls == [ev.id]
 
