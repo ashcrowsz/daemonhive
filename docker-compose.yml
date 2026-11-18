@@ -82,5 +82,8 @@ services:
     volumes: ["./deploy:/etc/litellm:ro"]
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Docker Desktop: host.docker.internal works. Docker Engine in WSL: use the Windows
+      # host's address on the WSL network (`ip route | awk '/default/{print $3}'`)
+      LMSTUDIO_API_BASE: ${LMSTUDIO_API_BASE:-http://host.docker.internal:1234/v1}
     extra_hosts: ["host.docker.internal:host-gateway"]
-    ports: ["4000:4000"]
+    ports: ["4001:4000"]  # 4000 is taken by sentinel's litellm when both stacks run

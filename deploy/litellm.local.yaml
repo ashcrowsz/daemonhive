@@ -4,12 +4,12 @@ model_list:
   - model_name: hive-small          # tier 1: routing, short classifications
     litellm_params:
       model: openai/nvidia/nemotron-3-nano-4b
-      api_base: http://host.docker.internal:1234/v1
+      api_base: os.environ/LMSTUDIO_API_BASE
       api_key: lm-studio
   - model_name: hive-large          # tier 2: the messages you actually read
     litellm_params:
       model: openai/google/gemma-4-e4b
-      api_base: http://host.docker.internal:1234/v1
+      api_base: os.environ/LMSTUDIO_API_BASE
       api_key: lm-studio
 
 litellm_settings:

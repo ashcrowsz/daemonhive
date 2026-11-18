@@ -57,7 +57,7 @@ Workout parsing is a grammar. Regression detection is arithmetic. Reminders are 
 
 ## run it ($0, local models)
 
-Everything runs on one machine: models in LM Studio, the hive in Docker. The full walkthrough (Telegram bot, seeding a week of data, replaying the scenario, watching the graph in Neo4j) is in **[DEMO.md](DEMO.md)**. Short version:
+Everything runs on one machine: models in LM Studio, the hive in Docker. `python -m scenarios.seed_demo` seeds a week of history so the reference scenario plays out live. To run it:
 
 ```bash
 cp .env.example .env        # telegram token + your chat id; models default to LM Studio
