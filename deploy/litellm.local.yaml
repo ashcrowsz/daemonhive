@@ -1,0 +1,20 @@
+# $0 setup: tier aliases point at LM Studio's OpenAI-compatible server on the host.
+# Load both models in LM Studio (Developer tab -> Start server, port 1234).
+model_list:
+  - model_name: hive-small          # tier 1: routing, short classifications
+    litellm_params:
+      model: openai/nvidia/nemotron-3-nano-4b
+      api_base: http://host.docker.internal:1234/v1
+      api_key: lm-studio
+  - model_name: hive-large          # tier 2: the messages you actually read
+    litellm_params:
+      model: openai/google/gemma-4-e4b
+      api_base: http://host.docker.internal:1234/v1
+      api_key: lm-studio
+
+litellm_settings:
+  drop_params: true
+
+router_settings:
+  num_retries: 1
+  timeout: 180

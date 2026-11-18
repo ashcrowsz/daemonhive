@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 
 from daemonhive.agents.fitness.parser import HEADER, LINE
+from daemonhive.agents.wellbeing.logs import is_wellbeing_log
 from daemonhive.common.tiers import Tier
 
 AGENTS = ("fitness", "wellbeing", "work")
@@ -26,11 +27,19 @@ KEYWORDS: dict[str, tuple[str, ...]] = {
         "meal",
         "nap",
     ),
-    "work": ("meeting", "task", "deadline", "calendar", "schedule", "todo", "project", "focus"),
+    "work": (
+        "meeting",
+        "task",
+        "deadline",
+        "calendar",
+        "schedule",
+        "todo",
+        "project",
+        "focus",
+        "plan",
+        "brief",
+    ),
 }
-
-SLEEP_LOG = re.compile(r"^\s*(slept|sleep)\s+\d+(\.\d+)?\s*h", re.IGNORECASE)
-MEAL_LOG = re.compile(r"^\s*(breakfast|lunch|dinner|snack)\b.*\d+\s*kcal", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -51,7 +60,7 @@ def looks_like_workout_log(text: str) -> bool:
 def route_by_rules(text: str) -> Route | None:
     if looks_like_workout_log(text):
         return Route(("fitness",), Tier.code, "workout grammar")
-    if SLEEP_LOG.match(text) or MEAL_LOG.match(text):
+    if is_wellbeing_log(text):
         return Route(("wellbeing",), Tier.code, "wellbeing log pattern")
     words = set(re.findall(r"[a-z]+", text.lower()))
     hits = tuple(a for a in AGENTS if words & set(KEYWORDS[a]))

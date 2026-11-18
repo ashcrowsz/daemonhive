@@ -1,7 +1,10 @@
-"""memory-mcp: the shared temporal knowledge graph (Graphiti on Neo4j) behind MCP.
+"""memory-mcp: the shared temporal knowledge graph on Neo4j, behind MCP.
 
-Every tool takes the caller's agent identity (from its MCP auth token in prod)
-and goes through the permission guard before touching the graph.
+Every tool takes the caller's agent identity and goes through the permission
+guard before touching the graph.
+
+MEMORY_BACKEND=cypher (default): structured facts written with Cypher, no LLM, $0.
+MEMORY_BACKEND=graphiti: Graphiti episodes (needs an LLM + embedder configured).
 """
 
 from __future__ import annotations
@@ -16,23 +19,32 @@ from fastmcp import FastMCP
 
 from daemonhive.mcp.permissions import Guard, entity_type
 
-guard = Guard(audit_path=Path(os.environ.get("AUDIT_LOG", "audit/memory.jsonl")))
+AUDIT = Path(os.environ.get("AUDIT_LOG", "audit/memory.jsonl"))
+AUDIT.parent.mkdir(parents=True, exist_ok=True)
+guard = Guard(audit_path=AUDIT)
 mcp = FastMCP("memory")
-_graphiti: Any = None
+BACKEND = os.environ.get("MEMORY_BACKEND", "cypher")
+NEO4J = (
+    os.environ.get("NEO4J_URI", "bolt://localhost:7687"),
+    os.environ.get("NEO4J_USER", "neo4j"),
+    os.environ.get("NEO4J_PASSWORD", "hivehive"),
+)
+_store: Any = None
 
 
-async def graph() -> Any:
-    global _graphiti
-    if _graphiti is None:
-        from graphiti_core import Graphiti
+async def store() -> Any:
+    global _store
+    if _store is None:
+        if BACKEND == "graphiti":
+            from graphiti_core import Graphiti
 
-        _graphiti = Graphiti(
-            os.environ.get("NEO4J_URI", "bolt://localhost:7687"),
-            os.environ.get("NEO4J_USER", "neo4j"),
-            os.environ.get("NEO4J_PASSWORD", "hivehive"),
-        )
-        await _graphiti.build_indices_and_constraints()
-    return _graphiti
+            _store = Graphiti(*NEO4J)
+            await _store.build_indices_and_constraints()
+        else:
+            from daemonhive.mcp.graph_store import CypherStore
+
+            _store = CypherStore(*NEO4J)
+    return _store
 
 
 @mcp.tool()
@@ -46,17 +58,19 @@ async def add_fact(
 ) -> str:
     """Record `subject -[relation]-> obj`, true from `valid_from` (ISO date)."""
     guard.check_write(agent, subject, relation, obj)
-    from graphiti_core.nodes import EpisodeType
+    s = await store()
+    if BACKEND == "graphiti":
+        from graphiti_core.nodes import EpisodeType
 
-    g = await graph()
-    body = f"{subject} {relation} {obj}. details: {props or {}}"
-    await g.add_episode(
-        name=f"{agent}:{subject}:{relation}",
-        episode_body=body,
-        source=EpisodeType.text,
-        source_description=f"agent:{agent}",
-        reference_time=datetime.fromisoformat(valid_from),
-    )
+        await s.add_episode(
+            name=f"{agent}:{subject}:{relation}",
+            episode_body=f"{subject} {relation} {obj}. details: {props or {}}",
+            source=EpisodeType.text,
+            source_description=f"agent:{agent}",
+            reference_time=datetime.fromisoformat(valid_from),
+        )
+    else:
+        await s.add_fact(agent, subject, relation, obj, valid_from, props or {})
     return "ok"
 
 
@@ -64,22 +78,28 @@ async def add_fact(
 async def search_facts(
     agent: str, query: str, entity: str, limit: int = 10
 ) -> list[dict[str, Any]]:
-    """Hybrid search over facts about one entity type the caller may read."""
-    guard.check_read(agent, entity_type(entity))
-    g = await graph()
-    edges = await g.search(f"{entity} {query}", num_results=limit)
-    return [
-        {"fact": e.fact, "valid_at": str(e.valid_at), "invalid_at": str(e.invalid_at)}
-        for e in edges
-    ]
+    """Facts about one entity type the caller may read, newest first."""
+    etype = entity_type(entity)
+    guard.check_read(agent, etype)
+    s = await store()
+    if BACKEND == "graphiti":
+        edges = await s.search(f"{entity} {query}", num_results=limit)
+        return [
+            {"fact": e.fact, "valid_from": str(e.valid_at), "valid_to": str(e.invalid_at)}
+            for e in edges
+        ]
+    return await s.search(etype, query, limit)
 
 
 @mcp.tool()
 async def get_entity_timeline(agent: str, entity: str) -> list[dict[str, Any]]:
-    """Every fact about `entity`, oldest first, including invalidated ones."""
+    """Every fact touching `entity`, oldest first, including closed ones."""
     guard.check_read(agent, entity_type(entity))
-    facts = await search_facts(agent, "", entity, limit=50)
-    return sorted(facts, key=lambda f: f["valid_at"])
+    s = await store()
+    if BACKEND == "graphiti":
+        facts = await search_facts(agent, "", entity, limit=50)
+        return sorted(facts, key=lambda f: f["valid_from"])
+    return await s.timeline(entity)
 
 
 def main() -> None:

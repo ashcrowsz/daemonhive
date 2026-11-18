@@ -55,13 +55,17 @@ Workout parsing is a grammar. Regression detection is arithmetic. Reminders are 
 
 ---
 
-## run it
+## run it ($0, local models)
+
+Everything runs on one machine: models in LM Studio, the hive in Docker. The full walkthrough (Telegram bot, seeding a week of data, replaying the scenario, watching the graph in Neo4j) is in **[DEMO.md](DEMO.md)**. Short version:
 
 ```bash
-cp .env.example .env        # telegram token, your chat id, litellm keys
+cp .env.example .env        # telegram token + your chat id; models default to LM Studio
 make dev && make test       # parser, analysis, A2A, permissions, scenarios
-make up                     # agents + postgres + neo4j + nats + litellm + ollama
+make up                     # agents + postgres + neo4j + nats + litellm (-> LM Studio on :1234)
 ```
+
+Memory runs on `MEMORY_BACKEND=cypher` by default: agents already hand memory a structured fact, so it goes straight into Neo4j with no LLM in the loop. Set it to `graphiti` to have free-text episodes extracted by a model instead.
 
 ## layout
 
