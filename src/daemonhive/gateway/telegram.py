@@ -35,6 +35,8 @@ async def on_message(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
+    # httpx logs every request URL at INFO, and Telegram URLs contain the bot token
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     app = Application.builder().token(os.environ["TELEGRAM_BOT_TOKEN"]).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
     app.run_polling()
