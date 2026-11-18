@@ -16,7 +16,10 @@ class AgentLLM:
         self.base_url = (
             base_url or os.environ.get("LITELLM_BASE_URL", "http://localhost:4000")
         ).rstrip("/")
-        self.key = os.environ.get(f"LITELLM_KEY_{agent.upper()}", "sk-local-dev")
+        # per-agent virtual key (needs LiteLLM's key DB); otherwise the proxy master key
+        self.key = os.environ.get(f"LITELLM_KEY_{agent.upper()}") or os.environ.get(
+            "LITELLM_MASTER_KEY", "sk-local-dev"
+        )
         # "none" skips thinking tokens on local reasoning models (gemma 4, qwen 3)
         self.reasoning_effort = os.environ.get("HIVE_REASONING_EFFORT", "")
 

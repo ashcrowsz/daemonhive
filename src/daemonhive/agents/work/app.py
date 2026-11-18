@@ -45,6 +45,8 @@ async def plan_message(today: date) -> str:
     when = f"{block.start:%H:%M}-{block.end:%H:%M}"
     if short_night:
         return f"Deep work {when}. Pushed back: you slept {res.output['avg_sleep_h']} h last night."
+    if res.state is not TaskState.completed:
+        return f"Deep work {when}. (Recovery data unavailable, planning a normal morning.)"
     if not known:
         return f"Deep work {when}. (No sleep logged for last night, assuming it was fine.)"
     return f"Deep work {when}. You slept {res.output['avg_sleep_h']} h, so mornings are fair game."

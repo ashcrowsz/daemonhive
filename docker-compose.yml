@@ -7,6 +7,7 @@ x-agent: &agent
     NATS_URL: nats://nats:4222
     NEO4J_URI: bolt://neo4j:7687
     LITELLM_BASE_URL: http://litellm:4000
+    LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?set LITELLM_MASTER_KEY in .env, see .env.example}
     MEMORY_MCP_URL: http://memory-mcp:8200/mcp
     FITNESS_URL: http://fitness:8101
     WELLBEING_URL: http://wellbeing:8102
@@ -82,6 +83,7 @@ services:
     volumes: ["./deploy:/etc/litellm:ro"]
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?set LITELLM_MASTER_KEY in .env, see .env.example}  # the proxy refuses to start without one
       # Docker Desktop: host.docker.internal works. Docker Engine in WSL: use the Windows
       # host's address on the WSL network (`ip route | awk '/default/{print $3}'`)
       LMSTUDIO_API_BASE: ${LMSTUDIO_API_BASE:-http://host.docker.internal:1234/v1}
