@@ -28,18 +28,20 @@ POLICY: dict[str, Scope] = {
     "fitness": Scope(
         read=frozenset({"Session", "Exercise", "Injury", "SleepDeficit", "CalorieDeficit"}),
         write_entities=frozenset({"Session", "Exercise", "Injury"}),
-        write_relations=frozenset({"PERFORMED", "AFFECTED_BY"}),
+        write_relations=frozenset({"PERFORMED", "AFFECTED_BY", "HIT_PR"}),
     ),
     "wellbeing": Scope(
-        read=frozenset({"Habit", "SleepDeficit", "CalorieDeficit", "Person"}),
-        write_entities=frozenset({"Habit", "SleepDeficit", "CalorieDeficit"}),
-        write_relations=frozenset({"HAS_WEIGHT", "HAS_HABIT"}),
+        read=frozenset({"Habit", "SleepDeficit", "CalorieDeficit", "Person", "Weight", "Phase"}),
+        write_entities=frozenset({"Person", "Habit", "SleepDeficit", "CalorieDeficit"}),
+        write_relations=frozenset({"HAS_WEIGHT", "HAS_HABIT", "IN_PHASE"}),
     ),
     "work": Scope(
         read=frozenset({"Project", "Session", "SleepDeficit"}),
         write_entities=frozenset({"Project"}),
         write_relations=frozenset({"WORKS_ON", "WORKS_ON_PRIMARY"}),
     ),
+    # the web UI: reads the whole graph, writes nothing
+    "viewer": Scope(read=frozenset({"*"}), write_entities=frozenset(), write_relations=frozenset()),
     "scribe": Scope(
         read=frozenset({"*"}),
         write_entities=frozenset({"*"}),

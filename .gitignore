@@ -6,3 +6,9 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 audit/*.jsonl
+
+# your own exported data: never committed
+data/private/
+# web UI build output and deps
+ui/node_modules/
+ui/dist/

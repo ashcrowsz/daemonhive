@@ -37,7 +37,7 @@ async def save(s: Session) -> int:
             for n, st in enumerate(ex.sets, 1):
                 await conn.execute(
                     "INSERT INTO fitness.set (session_id, exercise, ex_order, set_no, weight_kg,"
-                    " reps, rpe, bodyweight) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+                    " reps, rpe, bodyweight, load) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
                     sid,
                     ex.name,
                     order,
@@ -46,6 +46,7 @@ async def save(s: Session) -> int:
                     st.reps,
                     st.rpe,
                     st.bodyweight,
+                    st.load,
                 )
     return int(sid)
 
@@ -61,16 +62,52 @@ async def load_last(kind: str, before: date) -> Session | None:
     if row is None:
         return None
     sets = await p.fetch(
-        "SELECT exercise, weight_kg, reps, rpe, bodyweight FROM fitness.set "
+        "SELECT exercise, weight_kg, reps, rpe, bodyweight, load FROM fitness.set "
         "WHERE session_id = $1 ORDER BY ex_order, set_no",
         row["id"],
     )
     by_ex: dict[str, list[SetEntry]] = {}
     for r in sets:
         by_ex.setdefault(r["exercise"], []).append(
-            SetEntry(float(r["weight_kg"]), r["reps"], r["rpe"], r["bodyweight"])
+            SetEntry(
+                float(r["weight_kg"]),
+                r["reps"],
+                float(r["rpe"]) if r["rpe"] is not None else None,
+                r["bodyweight"],
+                r["load"],
+            )
         )
     return Session(row["kind"], row["day"], [Exercise(n, s) for n, s in by_ex.items()])
+
+
+async def load_all() -> list[Session]:
+    """The whole history, oldest first. A year is ~2k set rows: cheap to load per question."""
+    p = await pool()
+    sessions = await p.fetch("SELECT id, kind, day, notes FROM fitness.session ORDER BY day, id")
+    rows = await p.fetch(
+        "SELECT session_id, exercise, weight_kg, reps, rpe, bodyweight, load FROM fitness.set "
+        "ORDER BY session_id, ex_order, set_no"
+    )
+    by_session: dict[int, dict[str, list[SetEntry]]] = {}
+    for r in rows:
+        by_session.setdefault(r["session_id"], {}).setdefault(r["exercise"], []).append(
+            SetEntry(
+                float(r["weight_kg"]),
+                r["reps"],
+                float(r["rpe"]) if r["rpe"] is not None else None,
+                r["bodyweight"],
+                r["load"],
+            )
+        )
+    return [
+        Session(
+            s["kind"],
+            s["day"],
+            [Exercise(n, sets) for n, sets in by_session.get(s["id"], {}).items()],
+            [n for n in s["notes"].split("\n") if n],
+        )
+        for s in sessions
+    ]
 
 
 @mcp.tool()

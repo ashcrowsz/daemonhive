@@ -21,6 +21,7 @@ CREATE TABLE fitness.set (
     reps        int NOT NULL CHECK (reps > 0),
     rpe         numeric(3,1),
     bodyweight  boolean NOT NULL DEFAULT false,
+    load        text NOT NULL DEFAULT '',   -- "Max + 10kg", "5 plates": weight_kg is 0 then
     PRIMARY KEY (session_id, exercise, set_no)
 );
 CREATE INDEX ON fitness.set (exercise);

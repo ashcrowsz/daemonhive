@@ -65,6 +65,15 @@ TIMELINE = (
 )
 
 
+EXPORT_NODES = "MATCH (n:Entity) RETURN n.key AS key, n.type AS type"
+EXPORT_EDGES = (
+    "MATCH (s:Entity)-[r]->(o:Entity) "
+    "RETURN s.key AS subject, type(r) AS relation, o.key AS object, "
+    "toString(r.valid_from) AS valid_from, toString(r.valid_to) AS valid_to, "
+    "r.source AS source, r.props AS props ORDER BY r.valid_from LIMIT $limit"
+)
+
+
 class CypherStore:
     def __init__(self, uri: str, user: str, password: str) -> None:
         from neo4j import AsyncGraphDatabase
@@ -97,6 +106,12 @@ class CypherStore:
         async with self.driver.session() as s:
             res = await s.run(SEARCH, {"etype": etype, "q": query, "limit": limit})
             return [r.data() async for r in res]
+
+    async def export(self, limit: int) -> dict[str, Any]:
+        async with self.driver.session() as s:
+            nodes = [r.data() async for r in await s.run(EXPORT_NODES)]
+            edges = [r.data() async for r in await s.run(EXPORT_EDGES, {"limit": limit})]
+        return {"nodes": nodes, "edges": edges}
 
     async def timeline(self, key: str) -> list[dict[str, Any]]:
         async with self.driver.session() as s:

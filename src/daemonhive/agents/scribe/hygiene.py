@@ -38,7 +38,7 @@ class Fact:
     valid_to: date | None = None
 
 
-SINGLE_VALUED = {"HAS_WEIGHT", "HAS_GOAL", "WORKS_ON_PRIMARY"}
+SINGLE_VALUED = {"HAS_WEIGHT", "HAS_GOAL", "WORKS_ON_PRIMARY", "IN_PHASE"}
 
 
 def invalidate_superseded(facts: list[Fact]) -> list[Fact]:

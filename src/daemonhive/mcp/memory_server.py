@@ -102,6 +102,16 @@ async def get_entity_timeline(agent: str, entity: str) -> list[dict[str, Any]]:
     return await s.timeline(entity)
 
 
+@mcp.tool()
+async def export_graph(agent: str, limit: int = 2000) -> dict[str, Any]:
+    """The whole graph (nodes + dated edges), for scopes that may read everything."""
+    guard.check_read(agent, "*")
+    s = await store()
+    if BACKEND == "graphiti":
+        return {"nodes": [], "edges": [], "note": "export needs the cypher backend"}
+    return await s.export(limit)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--transport", default="stdio", choices=["stdio", "http"])

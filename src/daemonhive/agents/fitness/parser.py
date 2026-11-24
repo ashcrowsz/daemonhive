@@ -35,11 +35,57 @@ NAME_ALIASES = {
     "bench": "bench press",
     "bp": "bench press",
     "ohp": "overhead press",
+    "ovh press": "overhead press",
     "squat": "back squat",
     "dl": "deadlift",
+    "incline bench": "incline bench press",
+    "latpulldown": "lat pulldown",
+    "lat pull down": "lat pulldown",
+    "peck deck": "pec deck",
+    "peck flye": "pec deck",
+    "pec flye": "pec deck",
+    "peck deck flye": "pec deck",
+    "chest flye": "pec deck",
+    "tri pushdown": "triceps pushdown",
+    "triceps one arm pushdown": "single arm triceps pushdown",
+    "bahesian pushdown": "bayesian pushdown",
+    "sldl": "stiff-leg deadlift",
+    "sdl": "stiff-leg deadlift",
+    "smith sldl": "stiff-leg deadlift",
+    "rdl": "romanian deadlift",
+    "leg ext": "leg extension",
+    "hup adductor": "hip adductor",
+    "hip adduction": "hip adductor",
+    "adductor": "hip adductor",
+    "upperback row": "upper back row",
+    "machine lat raise": "machine lateral raise",
+    "lat raise machine": "machine lateral raise",
+    "unilateral machine lateral raise": "single arm machine lateral raise",
+    "uni cable lateral raise": "single arm cable lateral raise",
+    "calf": "calf raise",
+    "abs": "ab curl",
+    "ab machine": "ab curl",
+    "ab crunch": "ab curl",
 }
 # word-level abbreviations, expanded anywhere in a name
-WORD_ALIASES = {"db": "dumbbell", "bb": "barbell"}
+WORD_ALIASES = {
+    "db": "dumbbell",
+    "bb": "barbell",
+    "uni": "single arm",
+    "unilat": "single arm",
+    "unilateral": "single arm",
+    "tri": "triceps",
+    "pushdowns": "pushdown",
+    "raises": "raise",
+    "curls": "curl",
+    "flyes": "flye",
+    "flyess": "flye",
+    "extensions": "extension",
+    "rows": "row",
+    "shrugs": "shrug",
+    "pullups": "pullup",
+    "ohp": "overhead press",
+}
 
 
 class ParseError(ValueError):
@@ -52,6 +98,8 @@ class SetEntry:
     reps: int
     rpe: float | None = None
     bodyweight: bool = False
+    # free-text load when it isn't plain kg ("Max + 10kg", "5 plates"); weight_kg is 0 then
+    load: str = ""
 
 
 @dataclass
@@ -83,7 +131,8 @@ def normalize_name(raw: str) -> str:
     name = " ".join(raw.lower().replace(".", "").split())
     if name in NAME_ALIASES:
         return NAME_ALIASES[name]
-    return " ".join(WORD_ALIASES.get(w, w) for w in name.split())
+    name = " ".join(WORD_ALIASES.get(w, w) for w in name.split())
+    return NAME_ALIASES.get(name, name)
 
 
 def parse_weight(token: str) -> tuple[float, bool]:

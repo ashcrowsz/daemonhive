@@ -14,8 +14,11 @@ from typing import Any
 from fastapi import FastAPI
 
 from daemonhive.agents.wellbeing.logs import LogError, parse_log
+from daemonhive.agents.wellbeing.qa import WellbeingQA
 from daemonhive.agents.wellbeing.recovery import MealRow, SleepRow, recovery_summary
 from daemonhive.common.a2a import A2AServer, AgentCard, Skill, TaskRequest
+from daemonhive.common.llm import AgentLLM
+from daemonhive.common.memory_client import MemoryClient
 
 CARD = AgentCard(
     name="wellbeing",
@@ -41,6 +44,17 @@ CARD = AgentCard(
                 "required": ["until"],
             },
             examples=["How did I recover over the 3 days before 2026-11-03?"],
+        ),
+        Skill(
+            id="ask",
+            name="Answer a sleep / food / weight question",
+            description="Averages and lows over a window, body weight, current diet phase.",
+            examples=["how did I sleep this week?", "am I cutting?"],
+        ),
+        Skill(
+            id="dashboard",
+            name="Dashboard data",
+            description="Daily sleep and calories for the web UI. Aggregates only.",
         ),
     ],
 )
@@ -98,9 +112,30 @@ class PostgresRepo:
         rows = await p.fetch("SELECT day, kcal FROM wellbeing.meal")
         return [MealRow(r["day"], r["kcal"]) for r in rows]
 
+    async def weights(self) -> list[tuple[date, float]]:
+        p = await self.pool()
+        rows = await p.fetch("SELECT day, kg FROM wellbeing.body_weight ORDER BY day")
+        return [(r["day"], float(r["kg"])) for r in rows]
+
 
 repo = PostgresRepo(os.environ.get("DATABASE_URL", "postgresql://hive:hive@localhost:5432/hive"))
 KCAL_TARGET = int(os.environ.get("KCAL_TARGET", "2800"))
+memory = MemoryClient("wellbeing")
+llm = AgentLLM("wellbeing")
+
+
+async def qa() -> WellbeingQA:
+    async def person() -> list[dict[str, Any]]:
+        return await memory.timeline("Person:me")
+
+    return WellbeingQA(
+        await repo.sleep(),
+        await repo.meals(),
+        await repo.weights(),
+        date.today(),
+        KCAL_TARGET,
+        person,
+    )
 
 
 @server.skill("chat", allowed_callers={"concierge"})
@@ -126,6 +161,39 @@ async def recovery(req: TaskRequest) -> dict[str, Any]:
     return recovery_summary(
         await repo.sleep(), await repo.meals(), until=until, days=days, kcal_target=KCAL_TARGET
     )
+
+
+@server.skill("ask", allowed_callers={"concierge"})
+async def ask(req: TaskRequest) -> dict[str, Any]:
+    a = await (await qa()).answer(req.input["text"], llm)
+    return {"message": a.text, "tier": int(a.tier), "tool": a.tool, "steps": a.steps}
+
+
+@server.skill("dashboard", allowed_callers={"concierge"})
+async def dashboard(req: TaskRequest) -> dict[str, Any]:
+    q = await qa()
+    days = int(req.input.get("days", 120))
+    end = date.today()
+    start = date.fromordinal(end.toordinal() - days)
+    kcal: dict[date, int] = {}
+    for m in q.meals:
+        if start <= m.day <= end:
+            kcal[m.day] = kcal.get(m.day, 0) + m.kcal
+    sleep = {s.night_of: s.hours for s in q.sleep if start <= s.night_of <= end}
+    series = [
+        {"day": d.isoformat(), "kcal": kcal.get(d), "sleep_h": sleep.get(d)}
+        for d in sorted(set(kcal) | set(sleep))
+    ]
+    phase = await q.phase()
+    return {
+        "target": KCAL_TARGET,
+        "series": series,
+        "sleep_7d": await q.sleep_stats(7),
+        "kcal_7d": await q.kcal_stats(7),
+        "weight": await q.body_weight(),
+        "phase": phase,
+        "weights": [{"day": d.isoformat(), "kg": w} for d, w in q.weights],
+    }
 
 
 server.mount(app)

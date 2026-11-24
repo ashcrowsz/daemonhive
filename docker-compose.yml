@@ -1,7 +1,7 @@
 x-agent: &agent
   build: .
   env_file: .env
-  environment:
+  environment: &agent-env
     # inside the compose network, services are reached by name, not localhost
     DATABASE_URL: postgresql://hive:hive@postgres:5432/hive
     NATS_URL: nats://nats:4222
@@ -26,6 +26,11 @@ services:
     <<: *agent
     command: ["uvicorn", "daemonhive.agents.concierge.app:app", "--host", "0.0.0.0", "--port", "8100"]
     ports: ["8100:8100"]
+    # the web UI, once built (cd ui && npm run build): served at http://localhost:8100
+    volumes: ["./audit:/app/audit", "./ui/dist:/app/ui/dist:ro"]
+    environment:
+      <<: *agent-env
+      UI_DIST: /app/ui/dist
 
   fitness:
     <<: *agent
@@ -51,6 +56,13 @@ services:
     <<: *agent
     profiles: ["telegram"]
     command: ["python", "-m", "daemonhive.gateway.telegram"]
+
+  # one-off: import a training diary (see src/daemonhive/importer/run.py)
+  importer:
+    <<: *agent
+    profiles: ["tools"]
+    volumes: ["./data:/app/data:ro", "./audit:/app/audit"]
+    command: ["python", "-m", "daemonhive.importer.run", "--help"]
 
   postgres:
     image: postgres:16-alpine

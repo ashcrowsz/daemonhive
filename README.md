@@ -67,6 +67,49 @@ make up                     # agents + postgres + neo4j + nats + litellm (-> LM 
 
 Memory runs on `MEMORY_BACKEND=cypher` by default: agents already hand memory a structured fact, so it goes straight into Neo4j with no LLM in the loop. Set it to `graphiti` to have free-text episodes extracted by a model instead.
 
+## ask it things
+
+Questions go to the agent that owns the data, on its `ask` skill:
+
+```
+you: what's my last PR?
+hive: Your last PR was on Tue 27 Jan 2026: back squat 140 kg x 5 (est. 1RM 163.3 kg, beating 130 kg x 5).
+      [question -> fitness | tier 0]
+
+you: why did my lifts drop?
+hive: On Mon 2 Feb 2026 volume dropped: bench press -76%. Memory links it to short sleep
+      (last night 4.0 h) and low calories (1400 kcal the day before).   [tier 0]
+```
+
+The data is structured (sets, nights, meals, dated facts), so there's no vector store: retrieval is a query.
+Common questions (last PR, last push / pull / leg day, best lift, progression, when did I last…, how many
+sessions, why did a lift drop, sleep, calories, weight, diet phase) are matched by code and answered from
+the agent's own tables: **tier 0, no model**. Anything else goes through a small tool loop
+(`common/agentic.py`): the local model picks one of the agent's tools, sees the real numbers, and answers,
+so it can't invent a PR.
+
+## bring your own history
+
+`daemonhive.importer` reads a free-text training diary, the kind you keep in a notes app
+(`March 9: Pull` / `Latpulldown 93kg 2x8-7` / `Flat Press 5 Plates 1x5` / `Triceps Pushdown Max + 12.3kg 1x7`
+/ `Deadlift:` then its sets on the next lines / undated `Upper:` blocks / `Next Lower:` plans that aren't
+workouts). It stores sessions in Fitness's database, simulates sleep and calories around them (worse before
+the sessions where a lift dropped, your own notes win), and writes the facts each agent would have written:
+PRs, drops linked to sleep or calorie deficits, injuries mentioned in the log, body weight, diet phases.
+
+```bash
+docker compose down -v && docker compose up -d --build
+docker compose --profile tools run --build --rm importer   python -m daemonhive.importer.run data/private/my-log.txt:2025
+```
+
+`data/private/` is git-ignored. Run `--dry-run` first to see what it understood and which lines it skipped.
+
+## web UI
+
+`ui/` is a React app on [Astryx](https://github.com/meta/astryx): chat, an overview of the year, training
+(progression, sessions, PRs), the memory graph seen through each agent's permissions, and the hive's status
+and audit log. Concierge serves the built app at http://localhost:8100 (`cd ui && npm i && npm run build`).
+
 ## layout
 
 ```
