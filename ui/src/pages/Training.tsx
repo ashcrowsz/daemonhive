@@ -183,7 +183,7 @@ function ProgressionChart({ points }: { points: { day: string; e1rm: number; set
         <XAxis dataKey="day" tick={tick} axisLine={false} tickLine={false} minTickGap={40} />
         <YAxis tick={tick} axisLine={false} tickLine={false} domain={['auto', 'auto']} unit=" kg" />
         <Tooltip formatter={(v, _n, item) => [`${v} kg (${(item.payload as { set: string }).set})`, 'est. 1RM']} />
-        <Line dataKey="e1rm" stroke={C.blue} strokeWidth={2} dot={{ r: 2 }} />
+        <Line dataKey="e1rm" stroke={C.blue} strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
   )

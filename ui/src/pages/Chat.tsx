@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { HStack, VStack, Layout, LayoutContent } from '@astryxdesign/core/Layout'
 import { Heading, Text } from '@astryxdesign/core/Text'
 import {
@@ -37,11 +37,31 @@ export default function ChatPage() {
   const [busy, setBusy] = useState(false)
   const [draft, setDraft] = useState('')
 
+  // ?ask=...&ask=... asks those questions on load: handy for demos and screenshots
+  useEffect(() => {
+    const asks = new URLSearchParams(window.location.search).getAll('ask')
+    let cancelled = false
+    void (async () => {
+      for (const q of asks) {
+        if (cancelled) return
+        await ask(q)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const send = async (text: string) => {
-    const q = text.trim()
-    if (!q || busy) return
+    if (!text.trim() || busy) return
     setDraft('')
-    const id = Date.now()
+    await ask(text)
+  }
+
+  const ask = async (text: string) => {
+    const q = text.trim()
+    const id = Date.now() + Math.random()
     setTurns(t => [...t, { id, who: 'user', text: q }])
     setBusy(true)
     try {

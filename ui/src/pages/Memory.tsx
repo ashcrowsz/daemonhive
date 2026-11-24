@@ -152,7 +152,6 @@ export default function MemoryPage() {
                   {laid.nodes.map(n => {
                     const vis = readable(n.type)
                     const r = 4 + Math.sqrt(n.degree) * 2.4
-                    const label = n.type !== 'Session' && (n.degree >= 4 || n.type !== 'Exercise')
                     return (
                       <g
                         key={n.id}
@@ -167,21 +166,26 @@ export default function MemoryPage() {
                           stroke={writable(n.type) || n.id === picked ? 'var(--color-text-primary)' : 'var(--color-background-card)'}
                           strokeWidth={writable(n.type) || n.id === picked ? 2.5 : 1}
                         />
-                        {label && vis && (
-                          <text
-                            x={r + 3}
-                            y={4}
-                            fontSize={n.degree > 10 ? 17 : 13}
-                            fill="var(--color-text-primary)"
-                            stroke="var(--color-background-card)"
-                            strokeWidth={3}
-                            paintOrder="stroke">
-                            {n.id.split(':').slice(1).join(':') || n.id}
-                          </text>
-                        )}
                       </g>
                     )
                   })}
+                  {/* labels last, so no node is drawn over them */}
+                  {laid.nodes
+                    .filter(n => readable(n.type) && n.type !== 'Session' && (n.degree >= 4 || n.type !== 'Exercise'))
+                    .map(n => (
+                      <text
+                        key={`l-${n.id}`}
+                        x={(n.x ?? 0) + 6 + Math.sqrt(n.degree) * 2.4}
+                        y={(n.y ?? 0) + 4}
+                        fontSize={n.degree > 10 ? 17 : 13}
+                        fill="var(--color-text-primary)"
+                        stroke="var(--color-background-card)"
+                        strokeWidth={4}
+                        paintOrder="stroke"
+                        pointerEvents="none">
+                        {n.id.split(':').slice(1).join(':') || n.id}
+                      </text>
+                    ))}
                 </svg>
               </Card>
             {picked && (

@@ -121,7 +121,7 @@ export default function OverviewPage() {
                       <XAxis dataKey="week" tick={tick} axisLine={false} tickLine={false} interval={3} />
                       <YAxis allowDecimals={false} tick={tick} axisLine={false} tickLine={false} />
                       <Tooltip />
-                      <Bar dataKey="n" name="sessions" fill={C.blue} radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="n" name="sessions" fill={C.blue} radius={[3, 3, 0, 0]} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </VStack>
@@ -144,7 +144,7 @@ export default function OverviewPage() {
                       <YAxis domain={[1200, 2100]} ticks={[1400, 1800, 2000]} tick={tick} axisLine={false} tickLine={false} />
                       <Tooltip />
                       <ReferenceLine y={w.target} stroke={C.label} strokeDasharray="4 4" />
-                      <Bar dataKey="kcal" name="kcal" fill={C.orange} />
+                      <Bar dataKey="kcal" name="kcal" fill={C.orange} isAnimationActive={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
                   <Text type="supporting" color="secondary">
@@ -157,7 +157,7 @@ export default function OverviewPage() {
                       <YAxis domain={[3, 8]} ticks={[4, 6, 8]} tick={tick} axisLine={false} tickLine={false} unit="h" />
                       <Tooltip />
                       <ReferenceLine y={6} stroke={C.label} strokeDasharray="4 4" />
-                      <Line dataKey="sleep_h" name="sleep (h)" stroke={C.purple} dot={false} strokeWidth={2} />
+                      <Line dataKey="sleep_h" name="sleep (h)" stroke={C.purple} dot={false} strokeWidth={2} isAnimationActive={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </VStack>
