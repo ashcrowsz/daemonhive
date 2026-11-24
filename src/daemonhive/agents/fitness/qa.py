@@ -24,7 +24,7 @@ from daemonhive.agents.fitness.records import (
     find_regressions,
     session_key,
 )
-from daemonhive.common.agentic import Asker, Tool, run_agent
+from daemonhive.common.agentic import Asker, Tool, call_tool, run_agent
 from daemonhive.common.tiers import Tier
 
 MemorySearch = Callable[[str], Awaitable[list[dict[str, Any]]]]
@@ -460,7 +460,7 @@ class FitnessQA:
         tools = {t.name: t for t in self.tools()}
         if hit:
             name, args = hit
-            result = await tools[name].fn(**{k: v for k, v in args.items() if v is not None})
+            result = await call_tool(tools[name], {k: v for k, v in args.items() if v is not None})
             return Answer(self.render(name, result), Tier.code, name)
         if llm is None:
             return Answer(HELP, Tier.code)

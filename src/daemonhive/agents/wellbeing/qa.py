@@ -14,7 +14,7 @@ from typing import Any
 
 from daemonhive.agents.fitness.qa import Answer, nice
 from daemonhive.agents.wellbeing.recovery import MealRow, SleepRow
-from daemonhive.common.agentic import Asker, Tool, run_agent
+from daemonhive.common.agentic import Asker, Tool, call_tool, run_agent
 from daemonhive.common.tiers import Tier
 
 Timeline = Callable[[], Awaitable[list[dict[str, Any]]]]
@@ -191,7 +191,7 @@ class WellbeingQA:
         tools = {t.name: t for t in self.tools()}
         if hit:
             name, args = hit
-            return Answer(self.render(name, await tools[name].fn(**args)), Tier.code, name)
+            return Answer(self.render(name, await call_tool(tools[name], args)), Tier.code, name)
         if llm is None:
             return Answer(HELP, Tier.code)
         try:

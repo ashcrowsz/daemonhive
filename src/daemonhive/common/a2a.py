@@ -16,8 +16,10 @@ from enum import Enum
 from typing import Any
 
 import httpx
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
+
+from daemonhive.common.tracing import continue_trace, trace_headers, traceable
 
 
 class Skill(BaseModel):
@@ -101,7 +103,9 @@ class A2AServer:
             return self.card.model_dump()
 
         @app.post("/a2a/tasks")
-        async def run_task(req: TaskRequest, authorization: str = Header("")) -> TaskResult:
+        async def run_task(
+            req: TaskRequest, request: Request, authorization: str = Header("")
+        ) -> TaskResult:
             caller = self.tokens.get(authorization.removeprefix("Bearer ").strip())
             if caller is None or caller != req.caller:
                 raise HTTPException(401, "unknown caller")
@@ -110,8 +114,16 @@ class A2AServer:
                 return TaskResult(id=req.id, state=TaskState.rejected, error="unknown skill")
             if caller not in self.allowed_callers[req.skill]:
                 return TaskResult(id=req.id, state=TaskState.rejected, error="caller not allowed")
+            # the caller's trace continues here: this skill becomes a child span of its hop
+            span = traceable(
+                run_type="chain",
+                name=f"{self.card.name}.{req.skill}",
+                metadata={"agent": self.card.name, "skill": req.skill, "caller": caller},
+            )(handler)
             try:
-                return TaskResult(id=req.id, state=TaskState.completed, output=await handler(req))
+                with continue_trace(request.headers):
+                    output = await span(req)
+                return TaskResult(id=req.id, state=TaskState.completed, output=output)
             except Exception as exc:  # noqa: BLE001 - the callee's failure is data for the caller
                 return TaskResult(id=req.id, state=TaskState.failed, error=str(exc))
 
@@ -138,7 +150,7 @@ class A2AClient:
                 r = await c.post(
                     f"{base_url}/a2a/tasks",
                     json=req.model_dump(),
-                    headers={"Authorization": f"Bearer {self.token}"},
+                    headers={"Authorization": f"Bearer {self.token}", **trace_headers()},
                 )
                 r.raise_for_status()
                 return TaskResult.model_validate(r.json())

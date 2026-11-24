@@ -80,6 +80,19 @@ The data is structured (sets, nights, meals, dated facts), so there's **no vecto
 - **Everything else is a small tool loop** (`common/agentic.py`). The local model picks one of the agent's tools, sees the real numbers it returns, and answers. It can't invent a PR, because it never sees anything a tool didn't return.
 - **Cross-domain questions** ("why did my bench drop?") go to Fitness, which reads the `AFFECTED_BY` facts it's allowed to read from memory.
 
+### so is it RAG?
+
+It's **agentic retrieval over structured data and a temporal knowledge graph**: retrieval-augmented, but the retriever is a set of typed tools, not a similarity search.
+
+| pattern | is daemonhive this? |
+|---|---|
+| classic RAG (chunk → embed → top-k → stuff the prompt) | **no.** No embeddings, no vector store. Sets, nights and meals are rows; a "chunk" of them would only lose precision. |
+| **agentic RAG** (the model decides what to look up, sees it, may look again) | **yes, for open questions.** `common/agentic.py`: up to 3 tool calls over the agent's own tables and its slice of memory, then an answer grounded in what came back. |
+| GraphRAG (LLM-built graph + community summaries, query the summaries) | **partly.** There is a knowledge graph, but agents write it as typed facts with validity dates, not an LLM summarising documents. It's read with exact queries (`AFFECTED_BY`, `HIT_PR`, "what was true on 2 Feb"), not by summary. |
+| LLM wiki (the model writes and maintains markdown pages it later reads) | **no.** Nothing the model writes is ever read back as a source. Facts come from code and parsers. |
+
+Most questions never reach the model at all: tier 0 answers them with a query.
+
 ## bring your own history
 
 `daemonhive.importer` reads a free-text training diary, the kind you keep in a notes app, and it is forgiving on purpose:
@@ -109,6 +122,32 @@ docker compose --profile tools run --build --rm importer \
 `ui/` is a React app on [Astryx](https://github.com/meta/astryx), Meta's open-source design system: Chat, Overview, Training, Memory graph, and **Hive** (Agent Cards, up/down, routing tiers, the memory audit log). Concierge serves the built app at `http://localhost:8100`.
 
 The UI never touches a database. It reads Concierge's read-only `/api/*`, which asks the owning agent over A2A, and the graph comes from the memory server as a read-only `viewer`.
+
+## watch a question in LangSmith (optional)
+
+Off by default. Turn it on and every message becomes **one trace across all the services it touched**, because the A2A client forwards LangSmith's trace headers and the A2A server picks them up:
+
+```
+concierge.message                         "why did my bench drop?"
+├─ route                                  rules → fitness / ask         (no model)
+└─ fitness.ask                            ← the A2A hop, same trace
+   ├─ why                                 tool span: tier 0, a query
+   │                                       or, for an open question:
+   └─ agentic_retrieval
+      ├─ chat_completion   hive-large     prompt, reply, tokens
+      ├─ improvements      tool span      args + the rows it returned
+      └─ chat_completion   hive-large     the grounded answer
+```
+
+```bash
+# .env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=<your key>              # smith.langchain.com → Settings → API keys
+LANGSMITH_PROJECT=daemonhive
+docker compose up -d                      # agents pick it up on restart
+```
+
+**Privacy:** traces go to LangSmith's cloud, and this hive holds sleep, calories and body weight. `LANGSMITH_HIDE_INPUTS=true` / `LANGSMITH_HIDE_OUTPUTS=true` keep the tree, timings and token counts but drop the content. The LiteLLM key never goes into a trace (`process_inputs` strips it). Tests run with a mocked client, so `pytest` never sends anything.
 
 ---
 
@@ -144,7 +183,7 @@ You need Docker, Python 3.11+, Node 22+ and [LM Studio](https://lmstudio.ai) wit
 ```bash
 cp .env.example .env              # set LITELLM_MASTER_KEY; Telegram optional
 python -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"
-pytest -q                         # 80 tests, no network
+pytest -q                         # 83 tests, no network
 docker compose up -d --build      # 5 agents + memory + postgres + neo4j + nats + litellm
 cd ui && npm install && npm run build && cd ..   # web UI at http://localhost:8100
 ```
@@ -160,6 +199,7 @@ src/daemonhive/
   common/
     a2a.py            agent cards, task server/client, caller allow-lists
     agentic.py        the JSON tool loop for questions code can't answer
+    tracing.py        optional LangSmith spans + trace propagation over A2A
     memory_client.py  memory-mcp as one agent identity
     events.py         NATS subjects, idempotent consumer, dead-letter
     tiers.py          tier 0/1/2 + ledger
@@ -181,7 +221,8 @@ deploy/helm/          a Deployment + Service + NetworkPolicy per agent, CronJobs
 ## status
 
 - ✅ runs end to end on one machine with Docker + LM Studio, verified live: workout → A2A → memory → message, questions, the web UI, a year of imported history, an agent going down
-- ✅ 80 tests, CI on every push (ruff, pytest, the reference scenario on its own)
+- ✅ 83 tests, CI on every push (ruff, pytest, the reference scenario on its own)
+- ✅ LangSmith tracing wired and tested offline (one trace across the A2A hop, tool and model spans, no key in a trace) · 🚧 not yet run against a live LangSmith project
 - 🚧 not done yet: a cluster deployment (the Helm chart exists, nothing runs on k3s), Google Calendar for Work ([#2](https://github.com/ashcrowsz/daemonhive/issues/2)), an entity-resolution eval before Scribe merges anything ([#3](https://github.com/ashcrowsz/daemonhive/issues/3))
 
 ## things I would not do again

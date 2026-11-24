@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from daemonhive.common.tiers import Tier
+from daemonhive.common.tracing import drop, traceable
 
 
 class Asker(Protocol):
@@ -78,6 +79,13 @@ def describe(tools: list[Tool]) -> str:
     return "\n".join(lines)
 
 
+async def call_tool(tool: Tool, args: dict[str, Any]) -> Any:
+    """Run one tool as its own span, so a trace shows what was looked up and what came back."""
+    traced = traceable(run_type="tool", name=tool.name)(tool.fn)
+    return await traced(**args)
+
+
+@traceable(run_type="chain", name="agentic_retrieval", process_inputs=drop("tools", "llm"))
 async def run_agent(
     question: str, tools: list[Tool], llm: Asker, today: str, max_steps: int = 3
 ) -> AgentRun:
@@ -101,7 +109,7 @@ async def run_agent(
             continue
         args = obj.get("args") if isinstance(obj.get("args"), dict) else {}
         try:
-            result = await tool.fn(**{k: v for k, v in args.items() if k in tool.args})
+            result = await call_tool(tool, {k: v for k, v in args.items() if k in tool.args})
         except Exception as exc:  # noqa: BLE001 - a tool error is information for the model
             result = {"error": str(exc)}
         run.steps.append({"tool": tool.name, "args": args})

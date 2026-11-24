@@ -8,6 +8,21 @@ from typing import Any
 import httpx
 
 from daemonhive.common.tiers import TIER_MODELS, Tier
+from daemonhive.common.tracing import drop, traceable
+
+
+@traceable(run_type="llm", name="chat_completion", process_inputs=drop("base_url", "key"))
+async def chat_completion(base_url: str, key: str, body: dict[str, Any]) -> dict[str, Any]:
+    """One OpenAI-style call to LiteLLM. Traced as an LLM run (messages, tokens, model)."""
+    async with httpx.AsyncClient(timeout=180) as c:
+        r = await c.post(
+            f"{base_url}/v1/chat/completions",
+            headers={"Authorization": f"Bearer {key}"},
+            json=body,
+        )
+        r.raise_for_status()
+        data: dict[str, Any] = r.json()
+        return data
 
 
 class AgentLLM:
@@ -39,11 +54,17 @@ class AgentLLM:
         }
         if self.reasoning_effort:
             body["reasoning_effort"] = self.reasoning_effort
-        async with httpx.AsyncClient(timeout=180) as c:
-            r = await c.post(
-                f"{self.base_url}/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.key}"},
-                json=body,
-            )
-            r.raise_for_status()
-            return str(r.json()["choices"][0]["message"]["content"]).strip()
+        data = await chat_completion(
+            self.base_url,
+            self.key,
+            body,
+            langsmith_extra={
+                "metadata": {
+                    "agent": self.agent,
+                    "tier": int(tier),
+                    "ls_provider": "litellm",
+                    "ls_model_name": TIER_MODELS[tier],
+                }
+            },
+        )
+        return str(data["choices"][0]["message"]["content"]).strip()

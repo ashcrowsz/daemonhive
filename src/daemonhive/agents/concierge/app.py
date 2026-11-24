@@ -29,6 +29,7 @@ from daemonhive.common.a2a import A2AClient, TaskState
 from daemonhive.common.llm import AgentLLM
 from daemonhive.common.memory_client import MemoryClient
 from daemonhive.common.tiers import Tier, TierLedger
+from daemonhive.common.tracing import traceable
 from daemonhive.mcp.permissions import POLICY
 
 PEERS = {
@@ -65,7 +66,14 @@ async def route(text: str) -> Route:
 
 @app.post("/inbound")
 async def inbound(msg: Inbound) -> dict[str, object]:
-    r = await route(msg.text)
+    return await handle_message(msg.text)
+
+
+@traceable(run_type="chain", name="concierge.message")
+async def handle_message(text: str) -> dict[str, object]:
+    """The root span of a trace: one user message, start to reply."""
+    msg = Inbound(text=text)
+    r = await traceable(run_type="chain", name="route")(route)(msg.text)
     ledger.record(r.tier)
     replies: list[str] = []
     answer_tier = int(r.tier)
